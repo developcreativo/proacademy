@@ -49,8 +49,7 @@ function checkedIn($value, $key)
 
 function get_option($option, $default = null)
 {
-    return \App\Models\Option::where('option', $option)->value('value');
-    /*$cacheKey = 'get.' . $option;
+    $cacheKey = 'get.' . $option;
     $result = cache()->remember($cacheKey, 24 * 60 * 60, function () use ($option) {
         return \App\Models\Option::where('option', $option)->value('value');
     });
@@ -58,7 +57,7 @@ function get_option($option, $default = null)
         return $result;
     }
 
-    return $default;*/
+    return $default;
 }
 
 function getTemplate()

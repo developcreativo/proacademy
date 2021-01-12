@@ -25,8 +25,6 @@
         <link rel="stylesheet" href="/assets/default/stylesheets/view-custom.css?time={!! time() !!}"/>
     @endif
     <link rel="stylesheet" href="/assets/default/stylesheets/view-responsive.css"/>
-    <link rel="stylesheet" href="/assets/default/stylesheets/style-adjunto.css"/>
-
     @if(get_option('main_css')!='')
         <style>
             {!! get_option('main_css') !!}
@@ -36,28 +34,7 @@
     <title>@yield('title'){!! $title ?? '' !!}</title>
     @yield('style')
 </head>
-<body> 
-	<a style="display:none" class="button-cookies" href="#popup1"></a>
-
-<div id="popup1" class="overlay">
-	<div class="popup" style="display:flex">
-		<div class="col-lg-4 div-img-cookies">
-            <img class="img-cookies img-fluid" src="https://c1.sfdcstatic.com/content/dam/web/pt_br/www/images/seo/cookies/astro-cookie.png" alt="" srcset="">
-        </div>
-        <div class="col-lg-8 col-md-12">
-            <h2><strong>¿Estás pensando en galletas de chocolate?</strong></h2>
-            <div class="content">
-                Aún así nuestras cookies son una importante contribución a tu experiencia de compra. Nos ayudan a saber que cursos te gustan y te resultan útiles, recuerdan tus preferencias para facilitar tu navegación y nos avisan si la web se vuelve lenta o inestable. Haciendo click en "aceptar" confirmas que estás de acuerdo con su uso para guardar tus preferencias y para análisis estadístico de Marketing (mostar todo). Puedes consultar y gestionar mas detalles y opciones aquí.
-            </div>
-            <br>
-            <a style="background-color: #343871;font-size:15px;
-    border-radius: 20px;
-    padding: 10px;" class="more-link pull-right close-cookies">Aceptar</a>
-        </div>
-	</div>
-</div>
-
-
+<body>
 <div class="container-fluid">
     <div class="row line-header"></div>
     <div class="col-md-10 col-md-offset-1">
@@ -65,8 +42,8 @@
             <div class="col-md-3 col-xs-12 tab-con">
                 <div class="row">
                     <a href="/">
-                        <!--img src="{{ get_option('site_logo') }}" alt="{{ get_option('site_title') }}" class="logo-icon"/-->
-                        <img style="width:170px;" src="{{ get_option('site_logo_type') }}" alt="{{ get_option('site_title') }}" class="logo-type"/>
+                        <img src="{{ get_option('site_logo') }}" alt="{{ get_option('site_title') }}" class="logo-icon"/>
+                        <img src="{{ get_option('site_logo_type') }}" alt="{{ get_option('site_title') }}" class="logo-type"/>
                     </a>
                 </div>
             </div>

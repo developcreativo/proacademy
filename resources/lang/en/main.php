@@ -126,7 +126,7 @@ return [
     //footer
     'copyright' => 'All rights reserved.',
     'copyright2' => 'Graphics from freepik & icons from flaticon',
-    'social_footer' => 'Síguenos en las redes sociales:',
+    'social_footer' => 'Follow us on social networks:',
     'file_manager' => 'File Manager',
     //Buy
     'vendor' => 'Instructor',
@@ -373,7 +373,7 @@ return [
     'latest_news' => 'Latest News',
     'top_vendors' => 'Top Instructors',
     'courses_count' => 'Courses Count',
-    'top_channels' =>  'Our Social Networks',
+    'top_channels' => 'Top Channels',
     'best_rated' => 'Best Rated',
     //Product
     'support_address' => 'Please go to',

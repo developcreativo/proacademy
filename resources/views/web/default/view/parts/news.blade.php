@@ -123,18 +123,18 @@
                             <span class="best-chanels">{{ trans('main.top_channels') }}</span>
                         </div>
                         <div class="user-tabs">
-                            <!--ul class="nav nav-tabs nav-justified" role="tablist">
+                            <ul class="nav nav-tabs nav-justified" role="tablist">
                                 <li class="active"><a href="#tab4" role="tab" data-toggle="tab">{{ trans('main.newest') }}</a></li>
                                 <li><a href="#tab5" role="tab" data-toggle="tab">{{ trans('main.most_viewed') }}</a></li>
                                 <li><a href="#tab6" role="tab" data-toggle="tab">{{ trans('main.best_rated') }}</a></li>
-                            </ul-->
+                            </ul>
                             <!-- TAB CONTENT -->
                             <div class="tab-content">
                                 <div class="active tab-pane fade in" id="tab4">
                                     @if(isset($channels))
                                         @foreach($channels['new'] as $ur)
                                             <div class="col-md-3 tab-con">
-                                                <a href="{{ $ur->username }}">
+                                                <a href="/chanel/{{ $ur->username }}">
                                                     <img src="{{ !empty($ur->avatar) ? $ur->avatar : '/assets/default/images/user.png' }}">
                                                     <span>{{ !empty($ur->title) ? $ur->title : '' }}</span>
                                                 </a>
@@ -142,7 +142,7 @@
                                         @endforeach
                                     @endif
                                 </div>
-                                <!--div class="tab-pane fade" id="tab5">
+                                <div class="tab-pane fade" id="tab5">
                                     @if(isset($channels))
                                         @foreach($channels['view'] as $ur)
                                             <div class="col-md-3 tab-con">
@@ -165,7 +165,7 @@
                                             </div>
                                         @endforeach
                                     @endif
-                                </div-->
+                                </div>
                             </div>
                         </div>
                     </div>

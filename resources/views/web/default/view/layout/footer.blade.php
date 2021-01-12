@@ -26,7 +26,7 @@
                 @foreach($socials as $social)
                     <li>
                         <a href="{{ $social->link }}" target="_blank" title="{{ $social->title }}">
-                            <img style="width:28px;" src="{{ $social->icon }}" alt="{{ $social->title }}"/>
+                            <img src="{{ $social->icon }}" alt="{{ $social->title }}"/>
                         </a>
                     </li>
                 @endforeach
@@ -37,9 +37,9 @@
         <span class="copyright">
             {{ trans('main.copyright') }}
         </span>
-        <!--span class="copyright">
+        <span class="copyright">
              {{ trans('main.copyright2') }}
-        </span-->
+        </span>
     </div>
 </div>
 <div class="modal fade" id="uploader-modal" role="dialog">
@@ -116,16 +116,6 @@
         $('[data-toggle="tooltip"]').tooltip()
     })
     var preloader = {!! get_option('site_preloader',0) !!};
-    // cookie policy
-$(document).on('ready', function() {
-    $(".overlay").css('visibility','visible');
-    $(".overlay").css('opacity','1');
-    $(".overlay").css('z-index','99999');
-    $('.close-cookies').on('click',function(){
-        $('.overlay').css('visibility','').css('opacity','0');
-    });
-})
-
 </script>
 <script type="application/javascript" src="/assets/default/javascripts/view-custom.js"></script>
 @if(isset($user))
