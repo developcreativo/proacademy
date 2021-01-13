@@ -1572,7 +1572,7 @@ class UserController extends Controller
         $user = auth()->user();
         if (!is_numeric($request->price) || $request->price == 0)
             return redirect()->back()->with('msg', trans('main.number_only'));
-        
+
         $total=$request->price;
         //Replace , to .
         $total=str_replace(",",".",$total);
@@ -1590,9 +1590,9 @@ class UserController extends Controller
             $total=str_replace(".","",$total);
         }
         Stripe::setApiKey(env('STRIPE_SECRET'));
-       
+
         header('Content-Type: application/json');
-        
+
         $YOUR_DOMAIN = url('/');
 
         $checkout_session = \Stripe\Checkout\Session::create([
@@ -1622,7 +1622,7 @@ class UserController extends Controller
             'bank' => 'stripe'
         ]);
         \Session::put('stripe_checkout_id', $checkout_session['id']);
-        return json_encode(['id' => $checkout_session->id]);
+        return response()->json(['id' => $checkout_session->id])->setStatusCode(200);
     }
 
     public function balanceChargePay(Request $request)
@@ -1794,7 +1794,7 @@ class UserController extends Controller
                     </form>';
         }
         if ($request->type == 'stripe') {
-            
+
         }
         return redirect()->back()->with('msg', trans('main.feature_disabled'));
 

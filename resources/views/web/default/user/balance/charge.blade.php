@@ -64,7 +64,7 @@
 
             <form id="payment-form">
                 {{ csrf_field() }}
-                
+
                 <div class="form-group">
                     <label class="control-label col-md-2 tab-con ta-r">{{ trans('main.amount') }} ({{ currencySign() }})</label>
                     <div class="col-md-6 tab-con">
@@ -88,6 +88,14 @@
             const data = new FormData(document.getElementById('payment-form'));
             // Create a new Checkout Session using the server-side endpoint you
             // created in step 3.
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+
+
             fetch('/user/balance/charge/stripe', {
                 method: 'POST',
                 body: data
@@ -109,7 +117,8 @@
                 }
             })
             .catch(function(error) {
-                console.error('Error:', error);
+                console.log(error)
+               // console.error('Error:', error);
             });
         });
     </script>
