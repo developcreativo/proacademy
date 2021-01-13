@@ -186,6 +186,7 @@ Route::group(['prefix' => 'user'], function () {
             Route::get('charge', 'UserController@balanceCharge');
             Route::post('charge/pay', 'UserController@balanceChargePay');
             Route::get('report', 'UserController@balanceReport');
+            Route::post('charge/stripe', 'UserController@balanceChargeStripe');
         });
 
         ## Vimeo

@@ -31,7 +31,9 @@
 
 
 @section('script')
-    <script>$('#balance-hover').addClass('item-box-active');</script>
+    <script>//$('#balance-hover').addClass('item-box-active');</script>
+    
+    
 @endsection
 
 @include(getTemplate().'.user.layout.modals')

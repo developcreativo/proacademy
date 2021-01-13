@@ -127,6 +127,12 @@ Route::group(['middleware' => 'notification'], function () {
         Route::group(['prefix' => 'razorpay'], function () {
             Route::any('status/{id}', 'WebController@razorpayStatus');
         });
+
+        //Para armar pago con stripe
+        /*Route::group(['prefix' => 'stripe'], function () {
+            Route::any('status', 'WebController@stripeStatus');
+            Route::any('cancel/{id}', 'WebController@stripeCancel');
+        });*/
     });
 
 });

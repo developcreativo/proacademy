@@ -450,6 +450,16 @@
                                     </label>
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <div class="custom-switches-stacked">
+                                    <label class="custom-switch">
+                                        <input type="hidden" name="gateway_stripe" value="0">
+                                        <input type="checkbox" name="gateway_stripe" value="1" class="custom-switch-input" @if(!empty($_setting['gateway_stripe']) and $_setting['gateway_stripe']==1) checked @endif />
+                                        <span class="custom-switch-indicator"></span>
+                                        <label class="custom-switch-description" for="inputDefault">Stripe</label>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="col-md-3 control-label"></label>

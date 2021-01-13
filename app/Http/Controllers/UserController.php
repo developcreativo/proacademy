@@ -62,6 +62,9 @@ use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Rest\ApiContext;
 use Razorpay\Api\Api;
 use Tzsk\Payu\PayuGateway;
+use Stripe\Stripe;
+use Stripe\Charge;
+use Stripe\Checkout\Session;
 
 class UserController extends Controller
 {
@@ -1564,6 +1567,64 @@ class UserController extends Controller
         return view(getTemplate() . '.user.balance.charge', ['user' => $user]);
     }
 
+    public function balanceChargeStripe(Request $request)
+    {
+        $user = auth()->user();
+        if (!is_numeric($request->price) || $request->price == 0)
+            return redirect()->back()->with('msg', trans('main.number_only'));
+        
+        $total=$request->price;
+        //Replace , to .
+        $total=str_replace(",",".",$total);
+        //Make float number
+        $total=(float)$total;
+        //Round to 2 decimals
+        $total=round($total, 2);
+        //Find .
+        $pos = strpos($total, ".");
+        if ($pos === false) {
+            //Add two decimals
+            $total=(string)$total."00";
+        } else {
+            //Delete . decimal
+            $total=str_replace(".","",$total);
+        }
+        Stripe::setApiKey(env('STRIPE_SECRET'));
+       
+        header('Content-Type: application/json');
+        
+        $YOUR_DOMAIN = url('/');
+
+        $checkout_session = \Stripe\Checkout\Session::create([
+            'payment_method_types' => ['card'],
+            'line_items' => [[
+                'price_data' => [
+                'currency' => 'usd',
+                'unit_amount' => $total,
+                'product_data' => [
+                    'name' => 'Charge Your Wallet',
+                    'images' => ["https://i.imgur.com/EHyR2nP.png"],
+                ],
+                ],
+                'quantity' => 1,
+            ]],
+            'mode' => 'payment',
+            'success_url' => $YOUR_DOMAIN . '/payment/wallet/status?gateway=stripe',
+            'cancel_url' => $YOUR_DOMAIN . '/payment/wallet/cancel',
+        ]);
+        //dd($checkout_session['id']);
+        $Transaction = TransactionCharge::create([
+            'user_id' => $user->id,
+            'price' => $request->price,
+            'mode' => 'pending',
+            'authority' => $checkout_session['id'],
+            'created_at' => time(),
+            'bank' => 'stripe'
+        ]);
+        \Session::put('stripe_checkout_id', $checkout_session['id']);
+        return json_encode(['id' => $checkout_session->id]);
+    }
+
     public function balanceChargePay(Request $request)
     {
         $user = auth()->user();
@@ -1732,7 +1793,9 @@ class UserController extends Controller
                        <input type="hidden" name="_token" value="' . csrf_token() . '">
                     </form>';
         }
-
+        if ($request->type == 'stripe') {
+            
+        }
         return redirect()->back()->with('msg', trans('main.feature_disabled'));
 
     }

@@ -1879,6 +1879,30 @@ class WebController extends Controller
                 return redirect('/user/balance/charge')->with('msg', trans('main.successful'));
             }
         }
+        if (isset($request->gateway) && $request->gateway == 'stripe'){
+            //dd('con stripe');
+            $payment_id = \Session::get('stripe_checkout_id');
+            \Session::forget('paypal_payment_id');
+            $transaction = TransactionCharge::where('mode', 'pending')->where('authority', $payment_id)->first();
+           
+                $Amount = $transaction->price;
+                Balance::create([
+                    'title' => 'Wallet',
+                    'description' => 'Wallet charge',
+                    'type' => 'add',
+                    'price' => $Amount,
+                    'mode' => 'auto',
+                    'user_id' => $transaction->user_id,
+                    'exporter_id' => 0,
+                    'created_at' => time()
+                ]);
+                $userUpdate = User::find($transaction->user_id);
+                $userUpdate->update(['credit' => $userUpdate->credit + $Amount]);
+
+                TransactionCharge::find($transaction->id)->update(['mode' => 'deliver']);
+                return redirect('/user/balance/charge')->with('msg', trans('main.successful'));
+            
+        }
 
         return redirect('/user/balance/charge')->with('msg', 'Error');
     }
