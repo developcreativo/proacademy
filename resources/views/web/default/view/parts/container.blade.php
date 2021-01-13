@@ -1,6 +1,6 @@
 <div class="container hidden-xs hidden-sm" id="anchor-animate">
     <div class="h-25"></div>
-    <!--div class="row">
+    <div class="row">
         <div class="col-xs-12 col-md-4 container-banner-section">
             @if(isset($ads))
                 @foreach($ads as $ad)
@@ -84,6 +84,6 @@
                 </ul>
             </div>
         </div>
-    </div-->
+    </div>
     <div class="h-25"></div>
 </div>
