@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Mail;
+
 function returnCaptibiliy($array)
 {
 
@@ -12,7 +14,7 @@ function returnCaptibiliy($array)
 
 function arrayToList($array, $key, $val)
 {
-    if (empty($array) OR count($array) == 0)
+    if (empty($array) or count($array) == 0)
         return;
     foreach ($array as $a) {
         $result[$a[$key]] = $a[$val];
@@ -316,15 +318,15 @@ function sendMail(array $request)
         $template = cache()->remember('email.template.' . $request['template'], 24 * 60 * 60, function () use ($request) {
             return \App\Models\EmailTemplate::where('id', $request['template'])->first();
         });
-        if(isset($template)) {
+        if (isset($template)) {
             $request['message'] = $template->template;
             $request['subject'] = $template->title;
         }
     }
 
     foreach ($users as $to) {
-        if(isset($request['message'])) {
-            $request['message'] = str_replace(['[password]','[username]', '[name]', '[email]', '[active]', '[token]', '[n.title]', '[n.content]'], [isset($request['password'])?$request['password']:'',$to->username, $to->name, $to->email, url('/') . '/user/active/' . $to->token, url('/') . '/user/reset/token/' . $to->token, $request['title'], $request['content']], $request['message']);
+        if (isset($request['message'])) {
+            $request['message'] = str_replace(['[password]', '[username]', '[name]', '[email]', '[active]', '[token]', '[n.title]', '[n.content]'], [isset($request['password']) ? $request['password'] : '', $to->username, $to->name, $to->email, url('/') . '/user/active/' . $to->token, url('/') . '/user/reset/token/' . $to->token, $request['title'], $request['content']], $request['message']);
             Mail::send('email.content', ['content' => $request['message']], function ($mail) use ($to, $request) {
                 $mail->to($to->email, $to->name);
                 $mail->subject($request['subject']);
@@ -341,7 +343,6 @@ function sendMail(array $request)
     } else {
         return count($users);
     }
-
 }
 
 function expandSidebarMenu($nav = null, $array = null)
@@ -470,7 +471,7 @@ function getRate($user)
         }, 'sells', 'buys'])->with('point')->first();
 
     $p = [];
-    if(isset($_user->point)) {
+    if (isset($_user->point)) {
         foreach ($_user->point as $point) {
             $post_count = 0;
             $post_rate = 0;
@@ -499,31 +500,31 @@ function getRate($user)
     foreach ($rates as $rate) {
         $avg = explode(',', $rate->value);
         if ($rate->mode == 'videocount' and $avg[0] <= $_user->contents_count and $_user->contents_count <= $avg[1]) {
-            $result [] = $rate->toArray();
+            $result[] = $rate->toArray();
         }
         if ($rate->mode == 'sellcount' and $avg[0] <= $_user->sells_count and $_user->sells_count <= $avg[1]) {
-            $result [] = $rate->toArray();
+            $result[] = $rate->toArray();
         }
         if ($rate->mode == 'buycount' and $avg[0] <= $_user->buys_count and $_user->buys_count <= $avg[1]) {
-            $result [] = $rate->toArray();
+            $result[] = $rate->toArray();
         }
         if ($rate->mode == 'day' and $avg[0] <= ((time() - $_user->created_at) / 86400) and ((time() - $_user->created_at) / 86400) <= $avg[1]) {
-            $result [] = $rate->toArray();
+            $result[] = $rate->toArray();
         }
         if (isset($p['content_avg']) and $rate->mode == 'productrate' and $avg[0] <= $p['content_avg'] and $p['content_avg'] <= $avg[1]) {
-            $result [] = $rate->toArray();
+            $result[] = $rate->toArray();
         }
         if (isset($p['support_avg']) and $rate->mode == 'supportrate' and $avg[0] <= $p['support_avg'] and $p['support_avg'] <= $avg[1]) {
-            $result [] = $rate->toArray();
+            $result[] = $rate->toArray();
         }
         if (isset($p['post_avg']) and $rate->mode == 'postrate' and $avg[0] <= $p['post_avg'] and $p['post_avg'] <= $avg[1]) {
-            $result [] = $rate->toArray();
+            $result[] = $rate->toArray();
         }
     }
 
     ## For Custom Badge Relation ##
-    $UserRateRelation = \App\Models\UserRateRelation::where('user_id',$user['id'])->get();
-    foreach ($UserRateRelation as $URR){
+    $UserRateRelation = \App\Models\UserRateRelation::where('user_id', $user['id'])->get();
+    foreach ($UserRateRelation as $URR) {
         $result[] = \App\Models\UserRate::find($URR->rate_id)->toArray();
     }
 
@@ -570,37 +571,37 @@ function getRateById($userId)
         if ($rate->mode == 'videocount' && $avg[0] < $_user->contents_count && $_user->contents_count < $avg[1]) {
             $nr = $rate->toArray();
             $nr['title'] = trans('admin.from') . $avg[0] . trans('admin.to') . $avg[1] . trans('admin.courses');
-            $result [] = $nr;
+            $result[] = $nr;
         }
         if ($rate->mode == 'sellcount' && $avg[0] < $_user->sells_count && $_user->sells_count < $avg[1]) {
             $nr = $rate->toArray();
             $nr['title'] = trans('admin.from') . $avg[0] . trans('admin.to') . $avg[1] . trans('admin.sales');
-            $result [] = $nr;
+            $result[] = $nr;
         }
         if ($rate->mode == 'buycount' && $avg[0] < $_user->buys_count && $_user->buys_count < $avg[1]) {
             $nr = $rate->toArray();
             $nr['title'] = trans('admin.from') . $avg[0] . trans('admin.to') . $avg[1] . trans('admin.purchases');
-            $result [] = $nr;
+            $result[] = $nr;
         }
         if ($rate->mode == 'day' && $avg[0] < ((time() - $_user->created_at) / 86400) && ((time() - $_user->created_at) / 86400) < $avg[1]) {
             $nr = $rate->toArray();
             $nr['title'] = trans('admin.from') . $avg[0] . trans('admin.to') . $avg[1] . trans('admin.registration_days');
-            $result [] = $nr;
+            $result[] = $nr;
         }
         if (isset($p['content_avg']) && $rate->mode == 'productrate' && $avg[0] < $p['content_avg'] && $p['content_avg'] < $avg[1]) {
             $nr = $rate->toArray();
             $nr['title'] = trans('admin.from') . $avg[0] . trans('admin.to') . $avg[1] . trans('admin.course_rate');
-            $result [] = $nr;
+            $result[] = $nr;
         }
         if (isset($p['support_avg']) && $rate->mode == 'supportrate' && $avg[0] < $p['support_avg'] && $p['support_avg'] < $avg[1]) {
             $nr = $rate->toArray();
             $nr['title'] = trans('admin.from') . $avg[0] . trans('admin.to') . $avg[1] . trans('admin.support_rate');
-            $result [] = $nr;
+            $result[] = $nr;
         }
         if (isset($p['post_avg']) && $rate->mode == 'postrate' && $avg[0] < $p['post_avg'] && $p['post_avg'] < $avg[1]) {
             $nr = $rate->toArray();
             $nr['title'] = trans('admin.from') . $avg[0] . trans('admin.to') . $avg[1] . trans('admin.physical_sales_rate');
-            $result [] = $nr;
+            $result[] = $nr;
         }
     }
 
@@ -647,12 +648,14 @@ function sendNotification($senderId, $source, $message_id, $recipentType, $recip
     $title = str_replace(
         array_keys($source),
         array_values($source),
-        $message->title);
+        $message->title
+    );
 
     $message = str_replace(
         array_keys($source),
         array_values($source),
-        $message->template);
+        $message->template
+    );
 
     $notification = \App\Models\Notification::create([
         'user_id' => $senderId,
@@ -667,7 +670,7 @@ function sendNotification($senderId, $source, $message_id, $recipentType, $recip
     if ($recipentType == 'user') {
         $userEmail = \App\User::find($recipentList);
 
-        if(isset($userEmail) && isset($userEmail->email)) {
+        if (isset($userEmail) && isset($userEmail->email)) {
             sendMail([
                 'recipent' => [$userEmail->email],
                 'template' => get_option('email_notification_template', 0),
@@ -1125,12 +1128,13 @@ function contentCacheForget($id = null)
     }
 }
 
-function zoomCreateMeeting($userId, $contentId = null, $title = 'live',$duration = 60){
-    $jwt  = get_user_meta($userId,'zoom_jwt',null);
+function zoomCreateMeeting($userId, $contentId = null, $title = 'live', $duration = 60)
+{
+    $jwt  = get_user_meta($userId, 'zoom_jwt', null);
     $id   = null;
 
-    if($jwt == null)
-        return ['status'=> -2];
+    if ($jwt == null)
+        return ['status' => -2];
 
 
     $curl = curl_init();
@@ -1154,14 +1158,14 @@ function zoomCreateMeeting($userId, $contentId = null, $title = 'live',$duration
 
     curl_close($curl);
 
-    if($err){
-        return ['status'=> -2];
-    }else{
+    if ($err) {
+        return ['status' => -2];
+    } else {
         $response = json_decode($response, true);
-        if(isset($response['users'])){
+        if (isset($response['users'])) {
             $id = $response['users'][0]['id'];
-        }else{
-            return ['status'=> -2];
+        } else {
+            return ['status' => -2];
         }
     }
 
@@ -1194,10 +1198,10 @@ function zoomCreateMeeting($userId, $contentId = null, $title = 'live',$duration
     curl_close($curl);
 
     if ($err) {
-        return ['status'=> -2];
+        return ['status' => -2];
     } else {
         $response = json_decode($response, true);
-        if(isset($response['uuid'])){
+        if (isset($response['uuid'])) {
             return [
                 'status'    => 0,
                 'start_url' => $response['start_url'],
@@ -1205,21 +1209,22 @@ function zoomCreateMeeting($userId, $contentId = null, $title = 'live',$duration
             ];
         }
     }
-
 }
 
-function contentDuration($id){
-    $parts = \App\Models\ContentPart::where('content_id',$id)->get()->toArray();
+function contentDuration($id)
+{
+    $parts = \App\Models\ContentPart::where('content_id', $id)->get()->toArray();
     $Duration = 0;
 
     foreach ($parts as $part) {
         $Duration = $Duration + $part['duration'];
     }
 
-    return convertToHoursMins($Duration,'%01d hour %02d min');
+    return convertToHoursMins($Duration, '%01d hour %02d min');
 }
 
-function languages(){
+function languages()
+{
     return [
         'ab' => 'Abkhazian',
         'aa' => 'Afar',
@@ -1408,15 +1413,16 @@ function languages(){
     ];
 }
 
-function checkQuiz(){
+function checkQuiz()
+{
     return true;
 }
 
-function notificationStatus($id, $user_id){
-    $duplicate = \App\Models\NotificationStatus::where('user_id',$user_id)->where('notification_id', $id)->count();
-    if($duplicate > 0)
+function notificationStatus($id, $user_id)
+{
+    $duplicate = \App\Models\NotificationStatus::where('user_id', $user_id)->where('notification_id', $id)->count();
+    if ($duplicate > 0)
         return;
 
-    \App\Models\NotificationStatus::create(['notification_id'=>$id,'user_id'=>$user_id]);
+    \App\Models\NotificationStatus::create(['notification_id' => $id, 'user_id' => $user_id]);
 }
-
