@@ -71,9 +71,11 @@ class UserController extends Controller
     public function __construct()
     {
         $paypal_conf = \Config::get('paypal');
-        $this->_api_context = new ApiContext(new OAuthTokenCredential(
+        $this->_api_context = new ApiContext(
+            new OAuthTokenCredential(
                 $paypal_conf['client_id'],
-                $paypal_conf['secret'])
+                $paypal_conf['secret']
+            )
         );
         $this->_api_context->setConfig($paypal_conf['settings']);
     }
@@ -289,7 +291,6 @@ class UserController extends Controller
             }, 'transaction.balance', 'rate' => function ($r) use ($user) {
                 $r->where('user_id', $user->id)->first();
             }])->get();
-
         } else {
             $buyList = $buyListQuery->with(['content' => function ($q) {
                 $q->with(['metas', 'category', 'user']);
@@ -297,7 +298,6 @@ class UserController extends Controller
                 $r->where('user_id', $user->id)->first();
             }])->where('type', '<>', 'subscribe')
                 ->get();
-
         }
 
         return view(getTemplate() . '.user.sell.buy', ['list' => $buyList]);
@@ -1034,7 +1034,6 @@ class UserController extends Controller
         $newContent['user_id'] = $user->id;
         $content_id = Content::insertGetId($newContent);
         return redirect('/user/content/edit/' . $content_id);
-
     }
 
     public function contentEdit($id)
@@ -1071,7 +1070,6 @@ class UserController extends Controller
         } else {
             echo 'false';
         }
-
     }
 
     public function contentUpdateRequest($id, Request $request)
@@ -1093,7 +1091,6 @@ class UserController extends Controller
         } else {
             echo 'false';
         }
-
     }
 
     public function contentMetaStore($id, Request $request)
@@ -1188,7 +1185,6 @@ class UserController extends Controller
         } else {
             echo 'error';
         }
-
     }
 
     public function contentPartUpdate(Request $request, $id)
@@ -1202,7 +1198,6 @@ class UserController extends Controller
         } else {
             return back();
         }
-
     }
 
     ## Json Section
@@ -1360,7 +1355,6 @@ class UserController extends Controller
         //sendNotification(0, ['[t.title]' => $request->title], get_option('notification_template_ticket_new'), 'user', $user->id);
 
         return back();
-
     }
 
     public function ticketReply($id)
@@ -1573,21 +1567,21 @@ class UserController extends Controller
         if (!is_numeric($request->price) || $request->price == 0)
             return redirect()->back()->with('msg', trans('main.number_only'));
 
-        $total=$request->price;
+        $total = $request->price;
         //Replace , to .
-        $total=str_replace(",",".",$total);
+        $total = str_replace(",", ".", $total);
         //Make float number
-        $total=(float)$total;
+        $total = (float)$total;
         //Round to 2 decimals
-        $total=round($total, 2);
+        $total = round($total, 2);
         //Find .
         $pos = strpos($total, ".");
         if ($pos === false) {
             //Add two decimals
-            $total=(string)$total."00";
+            $total = (string)$total . "00";
         } else {
             //Delete . decimal
-            $total=str_replace(".","",$total);
+            $total = str_replace(".", "", $total);
         }
         Stripe::setApiKey(env('STRIPE_SECRET'));
 
@@ -1599,12 +1593,12 @@ class UserController extends Controller
             'payment_method_types' => ['card'],
             'line_items' => [[
                 'price_data' => [
-                'currency' => 'usd',
-                'unit_amount' => $total,
-                'product_data' => [
-                    'name' => 'Charge Your Wallet',
-                    'images' => ["https://i.imgur.com/EHyR2nP.png"],
-                ],
+                    'currency' => 'usd',
+                    'unit_amount' => $total,
+                    'product_data' => [
+                        'name' => 'Charge Your Wallet',
+                        'images' => ["https://i.imgur.com/EHyR2nP.png"],
+                    ],
                 ],
                 'quantity' => 1,
             ]],
@@ -1794,10 +1788,8 @@ class UserController extends Controller
                     </form>';
         }
         if ($request->type == 'stripe') {
-
         }
         return redirect()->back()->with('msg', trans('main.feature_disabled'));
-
     }
 
     public function balanceReport(Request $request)
@@ -1854,7 +1846,6 @@ class UserController extends Controller
             }
 
             fclose($handle);
-
         } catch (Exception $e) {
             trigger_error("file_get_contents_chunked::" . $e->getMessage(), E_USER_NOTICE);
             return false;
@@ -2168,7 +2159,6 @@ class UserController extends Controller
             'created_at' => time()
         ]);
         return redirect()->back()->with('msg', trans('main.req_success'));
-
     }
 
     private function saveUserAvatar($user, $image, $name)
@@ -2196,6 +2186,120 @@ class UserController extends Controller
         return false;
     }
 
+    ######################
+    ### Bank Section ##
+    ######################
+    ## Paypal
+
+    public function stripePay($id, $mode = 'download')
+    {
+        $user = (auth()->check()) ? auth()->user() : false;
+        if (!$user) {
+            return Redirect::to('/user?redirect=/product/' . $id);
+        }
+        $content = Content::with('metas')->where('mode', 'publish')->find($id);
+        if (!$content) {
+            abort(404);
+        }
+
+
+        if ($content->private == 1) {
+            $site_income = get_option('site_income_private');
+        } else {
+            $site_income = get_option('site_income');
+        }
+
+        ## Vendor Group Percent
+        $Vendor = User::with(['category'])->find($content->user_id);
+        if (isset($Vendor) && isset($Vendor->category->commision) && ($Vendor->category->commision > 0)) {
+            $site_income = $site_income - $Vendor->category->commision;
+        }
+        ## Vendor Rate Percent
+        if ($Vendor) {
+            $Rates = getRate($Vendor->toArray());
+            if ($Rates) {
+                $RatePercent = 0;
+                foreach ($Rates as $rate) {
+                    $RatePercent += $rate['commision'];
+                }
+
+                $site_income = $site_income - $RatePercent;
+            }
+        }
+
+        $meta = arrayToList($content->metas, 'option', 'value');
+
+        if ($mode == 'download')
+            $Amount = $meta['price'];
+        elseif ($mode == 'post')
+            $Amount = $meta['post_price'];
+
+
+        $Description = trans('admin.item_purchased') . $content->title . trans('admin.by') . $user['name']; // Required
+        $Amount_pay = pricePay($content->id, $content->category_id, $Amount)['price'];
+
+
+
+        //Replace , to .
+        $total = str_replace(",", ".", $Amount_pay);
+        //Make float number
+        $total = (float)$total;
+        //Round to 2 decimals
+        $total = round($total, 2);
+        //Find .
+        $pos = strpos($total, ".");
+        if ($pos === false) {
+            //Add two decimals
+            $total = (string)$total . "00";
+        } else {
+            //Delete . decimal
+            $total = str_replace(".", "", $total);
+        }
+
+
+        Stripe::setApiKey(env('STRIPE_SECRET'));
+
+        header('Content-Type: application/json');
+
+        $YOUR_DOMAIN = url('/');
+
+        $checkout_session = \Stripe\Checkout\Session::create([
+            'payment_method_types' => ['card'],
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => 'usd',
+                    'unit_amount' => $total,
+                    'product_data' => [
+                        'name' => 'Charge Your Wallet',
+                        'images' => ["https://i.imgur.com/EHyR2nP.png"],
+                    ],
+                ],
+                'quantity' => 1,
+            ]],
+            'mode' => 'payment',
+            'success_url' => $YOUR_DOMAIN . '/bank/stripe/status/',
+            'cancel_url' => $YOUR_DOMAIN . '/payment/stripe/cancel'
+        ]);
+        //dd($checkout_session['id']);
+
+        Transaction::insert([
+            'buyer_id' => $user['id'],
+            'user_id' => $content->user_id,
+            'content_id' => $content->id,
+            'price' => $total,
+            'price_content' => $total,
+            'mode' => 'pending',
+            'created_at' => time(),
+            'bank' => 'paypal',
+            'income' => $total - (($site_income / 100) * $total),
+            'authority' => $checkout_session['id'],
+            'type' => $mode
+        ]);
+
+        \Session::put('stripe_checkout_id', $checkout_session['id']);
+        return response()->json(['id' => $checkout_session->id])->setStatusCode(200);
+    }
+
 
     ######################
     ### Bank Section ##
@@ -2203,6 +2307,7 @@ class UserController extends Controller
     ## Paypal
     public function paypalPay($id, $mode = 'download')
     {
+
         $user = (auth()->check()) ? auth()->user() : false;
         if (!$user)
             return Redirect::to('/user?redirect=/product/' . $id);
@@ -2308,7 +2413,6 @@ class UserController extends Controller
         }
         \Session::put('error', 'Unknown error occurred');
         return Redirect::route('paywithpaypal');
-
     }
 
     public function paytmPay(Request $request, $id, $mode = 'download')
@@ -2378,7 +2482,6 @@ class UserController extends Controller
             'callback_url' => url('/') . '/bank/paytm/status/' . $content->id
         ]);
         return $payment->receive();
-
     }
 
     public function payuPay(Request $request, $id, $mode = 'download')
@@ -2656,10 +2759,10 @@ class UserController extends Controller
             'income' => $Amount_pay - (($site_income / 100) * $Amount_pay),
             'type' => $mode
         ]);
-
     }
 
-    public function wecashupPay(Request $request, $id, $mode = 'download'){
+    public function wecashupPay(Request $request, $id, $mode = 'download')
+    {
         $user = (auth()->check()) ? auth()->user() : false;
         if (!$user)
             return Redirect::to('/user?redirect=/product/' . $id);
@@ -2724,14 +2827,14 @@ class UserController extends Controller
         data-receiver-uid="EvIvZFlBKNaMddjXJOOpEWNeWj52"
           data-receiver-public-key="kCAc2vOwcANrbdKCuFnXLhS76yMx3f8iUytCbN8Drx6T"
         data-transaction-parent-uid=""
-        data-transaction-receiver-total-amount="'.$Amount_pay.'"
+        data-transaction-receiver-total-amount="' . $Amount_pay . '"
         data-transaction-receiver-reference="XVT2VBF"
         data-transaction-sender-reference="XVT2VBF"
         data-sender-firstname="Test"
         data-sender-lastname="Test"
         data-transaction-method="pull"
-        data-image="'.url('/').get_option('site_logo').'"
-        data-name="'.$content->title.'"
+        data-image="' . url('/') . get_option('site_logo') . '"
+        data-name="' . $content->title . '"
         data-crypto="true"
         data-cash="true"
         data-telecom="true"
@@ -2739,16 +2842,16 @@ class UserController extends Controller
         data-split="true"
         configuration-id="3"
         data-marketplace-mode="false"
-        data-product-1-name="'.$content->title.'"
+        data-product-1-name="' . $content->title . '"
         data-product-1-quantity="1"
         data-product-1-unit-price="594426"
         data-product-1-reference="XVT2VBF"
         data-product-1-category="Billeterie"
-        data-product-1-description="'.$content->title.'"
+        data-product-1-description="' . $content->title . '"
         >
         </script>
 </form>';
-}
+    }
 
     ## Credit Section
     public function creditPay($id, $mode = 'download')
@@ -3616,6 +3719,5 @@ class UserController extends Controller
         $user = auth()->user();
         MeetingDate::where('user_id', $user->id)->find($id)->update($request->all());
         return back()->with('msg', trans('main.successful'));
-
     }
 }

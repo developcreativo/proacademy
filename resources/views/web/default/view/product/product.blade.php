@@ -346,6 +346,15 @@
                                         <label class="radio-label" for="mode-6"> Razorpay </label>
                                     </div>
                                 @endif
+
+                                @if(get_option('gateway_stripe') == 1)
+                                    <div class="radio">
+                                        <input type="radio" class="buy-mode" id="mode-7" value="stripe" name="buyMode">
+                                        &nbsp;
+                                        <label class="radio-label" for="mode-7"> Stripe </label>
+                                    </div>
+                                @endif
+
                                 <div class="h-10"></div>
                                 <div class="table-responsive table-base-price">
                                     <table class="table table-hover table-factor-modal">
@@ -1054,6 +1063,7 @@
             })
         });
     </script>
+    <script src="https://js.stripe.com/v3/"></script>
     <script>
         $(document).ready(function () {
             $('input[type=radio][name=buy_mode]').change(function () {
@@ -1075,7 +1085,51 @@
         $(document).ready(function () {
             $('input[type=radio][name=buyMode]').change(function () {
                 var buyLink = '/bank/' + $(this).val() + '/pay/{{ $product->id }}/' + $('#buy_method').val();
-                $('#buyBtn').attr('href', buyLink);
+                let method = $(this).val();
+
+                (method != 'stripe') ? $('#buyBtn').attr('href', buyLink) : $('#buyBtn').attr('href', "#");
+
+
+                if (method === 'stripe') {
+                    var stripe = Stripe('pk_test_51I8niWDGmggSbM4RB5RyspUmRdAJUN5rWxjxUPpB6CKpetncLkMKsSg2DuxNIrUX9mxO7JI8kXDRJfcPiS96wcWK00ZSTgd9rN');
+
+                    var checkoutButton = document.getElementById('buyBtn');
+
+                        checkoutButton.addEventListener('click', function() {
+                            // Create a new Checkout Session using the server-side endpoint you
+                            // created in step 3.
+                            $.ajaxSetup({
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                }
+                            });
+
+
+                            fetch(buyLink, {
+                                method: 'GET',
+                            })
+                            .then(function(response) {
+                                return response.json();
+                            })
+                            .then(function(session) {
+                                console.log(session);
+                                console.log(stripe);
+                                return stripe.redirectToCheckout({ sessionId: session.id });
+                            })
+                            .then(function(result) {
+                                // If `redirectToCheckout` fails due to a browser or network
+                                // error, you should display the localized error message to your
+                                // customer using `error.message`.
+                                if (result.error) {
+                                    alert(result.error.message);
+                                }
+                            })
+                            .catch(function(error) {
+                                console.log(error)
+                            // console.error('Error:', error);
+                            });
+                        });
+                }
             })
         });
     </script>

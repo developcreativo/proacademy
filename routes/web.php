@@ -129,27 +129,26 @@ Route::group(['middleware' => 'notification'], function () {
         });
 
         //Para armar pago con stripe
-        /*Route::group(['prefix' => 'stripe'], function () {
-            Route::any('status', 'WebController@stripeStatus');
+        Route::group(['prefix' => 'stripe'], function () {
+            Route::get('status', 'WebController@stripeStatus');
             Route::any('cancel/{id}', 'WebController@stripeCancel');
-        });*/
+        });
     });
-
 });
 
-Route::get('update',function(){
-   $users = \App\User::all();
-   foreach ($users as $user){
-       try {
-           $password = decrypt($user->password);
-           \App\User::find($user->id)->update(['password'=>\Illuminate\Support\Facades\Hash::make($password)]);
-       } catch(\RuntimeException $e) {
-       }
-   }
+Route::get('update', function () {
+    $users = \App\User::all();
+    foreach ($users as $user) {
+        try {
+            $password = decrypt($user->password);
+            \App\User::find($user->id)->update(['password' => \Illuminate\Support\Facades\Hash::make($password)]);
+        } catch (\RuntimeException $e) {
+        }
+    }
 });
 
-Route::get('test', function (){
-   echo '<form action="https://www.wecashup.cloud/cdn/tests/websites/PHP/callback_lucas.php" method="POST" id="wecashup">
+Route::get('test', function () {
+    echo '<form action="https://www.wecashup.cloud/cdn/tests/websites/PHP/callback_lucas.php" method="POST" id="wecashup">
         <script async src="https://www.wecashup.com/library/MobileMoney.js" class="wecashup_button"
           data-demo
           data-sender-lang="en"

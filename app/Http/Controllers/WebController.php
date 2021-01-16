@@ -54,9 +54,11 @@ class WebController extends Controller
     public function __construct()
     {
         $paypal_conf = \Config::get('paypal');
-        $this->_api_context = new ApiContext(new OAuthTokenCredential(
+        $this->_api_context = new ApiContext(
+            new OAuthTokenCredential(
                 $paypal_conf['client_id'],
-                $paypal_conf['secret'])
+                $paypal_conf['secret']
+            )
         );
         $this->_api_context->setConfig($paypal_conf['settings']);
     }
@@ -108,7 +110,6 @@ class WebController extends Controller
     {
         $vipContentQuery = $this->getContentVipQuery();
         return $vipContentQuery->with('content.user')->get();
-
     }
 
     private function getSliderContainer()
@@ -117,7 +118,6 @@ class WebController extends Controller
         return $vipContentQuery->with(['content' => function ($query) {
             $query->with(['metas', 'user']);
         }])->get();
-
     }
 
     private function getBlogPosts()
@@ -126,7 +126,6 @@ class WebController extends Controller
             ->orderBy('id', 'DESC')
             ->limit(get_option('main_page_blog_post_count', 1))
             ->get();
-
     }
 
     private function getArticlePosts()
@@ -135,14 +134,12 @@ class WebController extends Controller
             ->orderBy('id', 'DESC')
             ->limit(get_option('main_page_article_post_count', 1))
             ->get();
-
     }
 
     private function getUserQuery()
     {
         return User::where('mode', 'active')
             ->where('admin', '0');
-
     }
 
     private function getUsersWithRates()
@@ -268,7 +265,9 @@ class WebController extends Controller
                 $content->where('type', 'course');
                 break;
             case 'webinar':
-                $content->where(function ($w){$w->where('type','webinar')->orwhere('type','course+webinar');});
+                $content->where(function ($w) {
+                    $w->where('type', 'webinar')->orwhere('type', 'course+webinar');
+                });
                 break;
             default:
                 break;
@@ -557,7 +556,6 @@ class WebController extends Controller
             $content[$index]['code'] = "(VT-" . $con['id'] . ")";
         }
         return $content;
-
     }
 
     private function getContentIds($q)
@@ -740,39 +738,40 @@ class WebController extends Controller
 
         $product = $content->withCount(['comments' => function ($q) {
             $q->where('mode', 'publish');
-        }])->with(['meetings','discount', 'category' => function ($c) use ($content, $id) {
-            $c->with(['discount' => function ($dc) use ($id, $content) {
-                $dc->where('off_id', $content->category->id);
-            }]);
-        }, 'rates', 'user' => function ($u) {
-            $u->with(['usermetas', 'point', 'contents' => function ($cQuery) {
-                $cQuery->where('mode', 'publish')->limit(3);
-            }]);
-        }, 'metas', 'parts' => function ($query) {
-            $query->where('mode', 'publish')->orderBy('sort');
-        }, 'favorite' => function ($fquery) use ($user) {
-            $fquery->where('user_id', $user->id);
-        }, 'comments' => function ($ccquery) use ($id) {
-            $ccquery->where('mode', 'publish')->with(['user' => function ($uquery) use ($id) {
-                $uquery->with(['category', 'usermetas'])->withCount(['buys' => function ($buysq) use ($id) {
-                    $buysq->where('content_id', $id);
-                }, 'contents' => function ($contentq) use ($id) {
-                    $contentq->where('id', $id);
+        }])->with([
+            'meetings', 'discount', 'category' => function ($c) use ($content, $id) {
+                $c->with(['discount' => function ($dc) use ($id, $content) {
+                    $dc->where('off_id', $content->category->id);
                 }]);
-            }, 'childs' => function ($cccquery) use ($id) {
-                $cccquery->where('mode', 'publish')->with(['user' => function ($cuquery) use ($id) {
-                    $cuquery->with(['category', 'usermetas'])->withCount(['buys' => function ($buysq) use ($id) {
+            }, 'rates', 'user' => function ($u) {
+                $u->with(['usermetas', 'point', 'contents' => function ($cQuery) {
+                    $cQuery->where('mode', 'publish')->limit(3);
+                }]);
+            }, 'metas', 'parts' => function ($query) {
+                $query->where('mode', 'publish')->orderBy('sort');
+            }, 'favorite' => function ($fquery) use ($user) {
+                $fquery->where('user_id', $user->id);
+            }, 'comments' => function ($ccquery) use ($id) {
+                $ccquery->where('mode', 'publish')->with(['user' => function ($uquery) use ($id) {
+                    $uquery->with(['category', 'usermetas'])->withCount(['buys' => function ($buysq) use ($id) {
                         $buysq->where('content_id', $id);
                     }, 'contents' => function ($contentq) use ($id) {
                         $contentq->where('id', $id);
                     }]);
+                }, 'childs' => function ($cccquery) use ($id) {
+                    $cccquery->where('mode', 'publish')->with(['user' => function ($cuquery) use ($id) {
+                        $cuquery->with(['category', 'usermetas'])->withCount(['buys' => function ($buysq) use ($id) {
+                            $buysq->where('content_id', $id);
+                        }, 'contents' => function ($contentq) use ($id) {
+                            $contentq->where('id', $id);
+                        }]);
+                    }]);
                 }]);
-            }]);
-        }, 'supports' => function ($q) use ($user) {
-            $q->with(['user.usermetas', 'supporter.usermetas', 'sender.usermetas'])->where('sender_id', $user->id)->where('mode', 'publish')->orderBy('id', 'DESC');
-        }, 'quizzes' => function ($q) {
-            $q->where('status', 'active');
-        }
+            }, 'supports' => function ($q) use ($user) {
+                $q->with(['user.usermetas', 'supporter.usermetas', 'sender.usermetas'])->where('sender_id', $user->id)->where('mode', 'publish')->orderBy('id', 'DESC');
+            }, 'quizzes' => function ($q) {
+                $q->where('status', 'active');
+            }
         ])->find($id);
 
         $hasCertificate = false;
@@ -828,7 +827,7 @@ class WebController extends Controller
 
         $meta = arrayToList($product->metas, 'option', 'value');
         $parts = $product->parts->toArray();
-        if(isset($product->user))
+        if (isset($product->user))
             $rates = getRate($product->user->toArray());
         else
             $rates = [];
@@ -869,16 +868,16 @@ class WebController extends Controller
         }
 
         ## Live video ##
-        if($buy || (isset($user) && $user->id == $product->user_id)){
-            $live = MeetingDate::where('mode','active')->where('content_id', $id)->where('time_start','<', time())->where('time_end','>', time())->orderBy('id','DESC')->first();
-        }else{
+        if ($buy || (isset($user) && $user->id == $product->user_id)) {
+            $live = MeetingDate::where('mode', 'active')->where('content_id', $id)->where('time_start', '<', time())->where('time_end', '>', time())->orderBy('id', 'DESC')->first();
+        } else {
             $live = false;
         }
 
         $data = [
             'product'               => $product,
             'hasCertificate'        => $hasCertificate,
-            'canDownloadCertificate'=> $canDownloadCertificate,
+            'canDownloadCertificate' => $canDownloadCertificate,
             'meta'                  => $meta,
             'parts'                 => $parts,
             'rates'                 => $rates,
@@ -978,7 +977,6 @@ class WebController extends Controller
             $preCousreContent = Content::where('mode', 'publish')
                 ->whereIn('id', $preCourseIDs)
                 ->get();
-
         }
 
         if (!cookie('cv' . $id)) {
@@ -1454,7 +1452,7 @@ class WebController extends Controller
             $list->where('title', 'LIKE', '%' . $request->get('q', null) . '%');
         }
 
-        if(isset($user))
+        if (isset($user))
             $lists = $list->with(['content', 'category', 'fans' => function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             }])->withCount(['fans'])
@@ -1572,7 +1570,7 @@ class WebController extends Controller
             $query->where('title', 'LIKE', '%' . $search_param . '%');
         }
 
-        if(isset($user))
+        if (isset($user))
             $records = $query->with(['content', 'category', 'fans' => function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             }])->withCount(['fans'])->get();
@@ -1641,7 +1639,6 @@ class WebController extends Controller
 
         $stream = new VideoStream($file);
         $stream->start();
-
     }
 
     public function videoDownload($id)
@@ -1695,7 +1692,6 @@ class WebController extends Controller
             return Response::download($storagePath . $file5);
 
         return back();
-
     }
 
     public function videoProgress()
@@ -1745,7 +1741,6 @@ class WebController extends Controller
             //echo "Progress: " . $progress . "%";
 
             return $progress;
-
         }
     }
 
@@ -1849,18 +1844,17 @@ class WebController extends Controller
 
                 TransactionCharge::find($Transaction->id)->update(['mode' => 'deliver']);
                 return redirect('/user/balance/charge')->with('msg', '');
-
             }
         }
-        if (isset($request->gateway) && $request->gateway == 'razorpay'){
-            $razorpay = new \Razorpay\Api\Api(env('RAZORPAY_KEY_ID'),env('RAZORPAY_KEY_SECRET'));
+        if (isset($request->gateway) && $request->gateway == 'razorpay') {
+            $razorpay = new \Razorpay\Api\Api(env('RAZORPAY_KEY_ID'), env('RAZORPAY_KEY_SECRET'));
             $order = $razorpay->utility->verifyPaymentSignature([
                 'razorpay_signature'    => $request->razorpay_signature,
                 'razorpay_payment_id'   => $request->razorpay_payment_id,
                 'razorpay_order_id'     => $request->razorpay_order_id
             ]);
-            if($order == null){
-                $Transaction = TransactionCharge::where('authority',$request->razorpay_order_id)->first();
+            if ($order == null) {
+                $Transaction = TransactionCharge::where('authority', $request->razorpay_order_id)->first();
                 $Amount = $Transaction->price;
                 Balance::create([
                     'title' => 'Wallet',
@@ -1879,32 +1873,82 @@ class WebController extends Controller
                 return redirect('/user/balance/charge')->with('msg', trans('main.successful'));
             }
         }
-        if (isset($request->gateway) && $request->gateway == 'stripe'){
+        if (isset($request->gateway) && $request->gateway == 'stripe') {
             //dd('con stripe');
             $payment_id = \Session::get('stripe_checkout_id');
             \Session::forget('paypal_payment_id');
             $transaction = TransactionCharge::where('mode', 'pending')->where('authority', $payment_id)->first();
-           
-                $Amount = $transaction->price;
-                Balance::create([
-                    'title' => 'Wallet',
-                    'description' => 'Wallet charge',
-                    'type' => 'add',
-                    'price' => $Amount,
-                    'mode' => 'auto',
-                    'user_id' => $transaction->user_id,
-                    'exporter_id' => 0,
-                    'created_at' => time()
-                ]);
-                $userUpdate = User::find($transaction->user_id);
-                $userUpdate->update(['credit' => $userUpdate->credit + $Amount]);
 
-                TransactionCharge::find($transaction->id)->update(['mode' => 'deliver']);
-                return redirect('/user/balance/charge')->with('msg', trans('main.successful'));
-            
+            $Amount = $transaction->price;
+            Balance::create([
+                'title' => 'Wallet',
+                'description' => 'Wallet charge',
+                'type' => 'add',
+                'price' => $Amount,
+                'mode' => 'auto',
+                'user_id' => $transaction->user_id,
+                'exporter_id' => 0,
+                'created_at' => time()
+            ]);
+            $userUpdate = User::find($transaction->user_id);
+            $userUpdate->update(['credit' => $userUpdate->credit + $Amount]);
+
+            TransactionCharge::find($transaction->id)->update(['mode' => 'deliver']);
+            return redirect('/user/balance/charge')->with('msg', trans('main.successful'));
         }
 
         return redirect('/user/balance/charge')->with('msg', 'Error');
+    }
+
+
+    public function stripeStatus(Request $request)
+    {
+        $payment_id = \Session::get('stripe_checkout_id');
+
+        \Session::forget('paypal_payment_id');
+        if (empty($payment_id)) {
+            \Session::put('error', 'Payment failed');
+            return \redirect('/');
+        }
+
+        $transaction = Transaction::where('mode', 'pending')->where('authority', $payment_id)->firstOrFail();
+
+
+
+        $product = Content::find($transaction->content_id);
+        $userUpdate = User::with('category')->find($transaction->user_id);
+        if ($product->private == 1)
+            $site_income = get_option('site_income_private') - $userUpdate->category->off;
+        else
+            $site_income = get_option('site_income') - $userUpdate->category->off;
+
+        if (empty($transaction))
+            \redirect('/product/' . $transaction->content_id);
+
+        $Amount = $transaction->price;
+
+        Sell::insert([
+            'user_id' => $transaction->user_id,
+            'buyer_id' => $transaction->buyer_id,
+            'content_id' => $transaction->content_id,
+            'type' => $transaction->type,
+            'created_at' => time(),
+            'mode' => 'pay',
+            'transaction_id' => $transaction->id,
+            'remain_time' => $transaction->remain_time
+        ]);
+
+        $userUpdate->update(['income' => $userUpdate->income + ((100 - $site_income) / 100) * $Amount]);
+        Transaction::find($transaction->id)->update(['mode' => 'deliver', 'income' => ((100 - $site_income) / 100) * $Amount]);
+
+        ## Notification Center
+        sendNotification(0, ['[c.title]' => $product->title], get_option('notification_template_buy_new'), 'user', $transaction->buyer_id);
+
+        return redirect('/product/' . $transaction->content_id);
+    }
+
+    public function stripeCancel(Request $request)
+    {
     }
 
     ######################
@@ -1914,6 +1958,7 @@ class WebController extends Controller
 
     public function paypalStatus(Request $request)
     {
+        //dd($request->all());
         $payment_id = \Session::get('paypal_payment_id');
         \Session::forget('paypal_payment_id');
         if (empty($request->PayerID) || empty($request->token)) {
@@ -1956,7 +2001,6 @@ class WebController extends Controller
             sendNotification(0, ['[c.title]' => $product->title], get_option('notification_template_buy_new'), 'user', $transaction->buyer_id);
 
             return redirect('/product/' . $transaction->content_id);
-
         }
         return redirect('/product/' . $transaction->content_id);
     }
@@ -1972,55 +2016,7 @@ class WebController extends Controller
         $Transaction = Transaction::find($transaction->getOrderId());
         $response = $transaction->response();
 
-        if($transaction->isSuccessful()){
-            $product = Content::find($Transaction->content_id);
-            $userUpdate = User::with('category')->find($Transaction->user_id);
-            if($product->private == 1)
-                $site_income = get_option('site_income_private')-$userUpdate->category->off;
-            else
-                $site_income = get_option('site_income')-$userUpdate->category->off;
-
-            if(empty($transaction))
-                \redirect('/product/'.$Transaction->content_id);
-
-            $Amount = $Transaction->price;
-
-            Sell::insert([
-                'user_id'       => $Transaction->user_id,
-                'buyer_id'      => $Transaction->buyer_id,
-                'content_id'    => $Transaction->content_id,
-                'type'          => $Transaction->type,
-                'created_at'    => time(),
-                'mode'          => 'pay',
-                'transaction_id'=> $Transaction->id,
-                'remain_time'   => $Transaction->remain_time
-            ]);
-
-            $userUpdate->update(['income'=>$userUpdate->income+((100-$site_income)/100)*$Amount]);
-            Transaction::find($Transaction->id)->update(['mode'=>'deliver','income'=>((100-$site_income)/100)*$Amount]);
-
-            ## Notification Center
-            sendNotification(0,['[c.title]'=>$product->title],get_option('notification_template_buy_new'),'user',$Transaction->buyer_id);
-
-            return redirect('/product/'.$Transaction->content_id);
-
-        }else if($transaction->isFailed()){
-            return \redirect('/product/'.$product_id)->with('msg',trans('admin.payment_failed'));
-        }else if($transaction->isOpen()){
-            //Transaction Open/Processing
-        }
-    }
-    public function paytmCancel($id, Request $request)
-    {
-        return \redirect('/product/' . $id)->with('msg', trans('admin.payment_failed'));
-    }
-
-    ## Payu
-    public function payuStatus($product_id, Request $request)
-    {
-        $Payment = \Tzsk\Payu\Facade\Payment::capture();
-        if($Payment->status == 'Completed'){
-            $Transaction = Transaction::where('authority',$Payment->txnid)->first();
+        if ($transaction->isSuccessful()) {
             $product = Content::find($Transaction->content_id);
             $userUpdate = User::with('category')->find($Transaction->user_id);
             if ($product->private == 1)
@@ -2040,7 +2036,7 @@ class WebController extends Controller
                 'type'          => $Transaction->type,
                 'created_at'    => time(),
                 'mode'          => 'pay',
-                'transaction_id'=> $Transaction->id,
+                'transaction_id' => $Transaction->id,
                 'remain_time'   => $Transaction->remain_time
             ]);
 
@@ -2051,7 +2047,54 @@ class WebController extends Controller
             sendNotification(0, ['[c.title]' => $product->title], get_option('notification_template_buy_new'), 'user', $Transaction->buyer_id);
 
             return redirect('/product/' . $Transaction->content_id);
-        }else{
+        } else if ($transaction->isFailed()) {
+            return \redirect('/product/' . $product_id)->with('msg', trans('admin.payment_failed'));
+        } else if ($transaction->isOpen()) {
+            //Transaction Open/Processing
+        }
+    }
+    public function paytmCancel($id, Request $request)
+    {
+        return \redirect('/product/' . $id)->with('msg', trans('admin.payment_failed'));
+    }
+
+    ## Payu
+    public function payuStatus($product_id, Request $request)
+    {
+        $Payment = \Tzsk\Payu\Facade\Payment::capture();
+        if ($Payment->status == 'Completed') {
+            $Transaction = Transaction::where('authority', $Payment->txnid)->first();
+            $product = Content::find($Transaction->content_id);
+            $userUpdate = User::with('category')->find($Transaction->user_id);
+            if ($product->private == 1)
+                $site_income = get_option('site_income_private') - $userUpdate->category->off;
+            else
+                $site_income = get_option('site_income') - $userUpdate->category->off;
+
+            if (empty($transaction))
+                \redirect('/product/' . $Transaction->content_id);
+
+            $Amount = $Transaction->price;
+
+            Sell::insert([
+                'user_id'       => $Transaction->user_id,
+                'buyer_id'      => $Transaction->buyer_id,
+                'content_id'    => $Transaction->content_id,
+                'type'          => $Transaction->type,
+                'created_at'    => time(),
+                'mode'          => 'pay',
+                'transaction_id' => $Transaction->id,
+                'remain_time'   => $Transaction->remain_time
+            ]);
+
+            $userUpdate->update(['income' => $userUpdate->income + ((100 - $site_income) / 100) * $Amount]);
+            Transaction::find($Transaction->id)->update(['mode' => 'deliver', 'income' => ((100 - $site_income) / 100) * $Amount]);
+
+            ## Notification Center
+            sendNotification(0, ['[c.title]' => $product->title], get_option('notification_template_buy_new'), 'user', $Transaction->buyer_id);
+
+            return redirect('/product/' . $Transaction->content_id);
+        } else {
             return \redirect('/product/' . $product_id)->with('msg', trans('admin.payment_failed'));
         }
     }
@@ -2102,15 +2145,16 @@ class WebController extends Controller
     }
 
     ## Razorpay
-    public function razorpayStatus($product_id, Request $request){
-        $razorpay = new \Razorpay\Api\Api(env('RAZORPAY_KEY_ID'),env('RAZORPAY_KEY_SECRET'));
+    public function razorpayStatus($product_id, Request $request)
+    {
+        $razorpay = new \Razorpay\Api\Api(env('RAZORPAY_KEY_ID'), env('RAZORPAY_KEY_SECRET'));
         $order = $razorpay->utility->verifyPaymentSignature([
             'razorpay_signature'    => $request->razorpay_signature,
             'razorpay_payment_id'   => $request->razorpay_payment_id,
             'razorpay_order_id'     => $request->razorpay_order_id
         ]);
-        if($order == null){
-            $Transaction = Transaction::where('authority',$request->razorpay_order_id)->first();
+        if ($order == null) {
+            $Transaction = Transaction::where('authority', $request->razorpay_order_id)->first();
             $product = Content::find($Transaction->content_id);
             $userUpdate = User::with('category')->find($Transaction->user_id);
             if ($product->private == 1)
@@ -2130,7 +2174,7 @@ class WebController extends Controller
                 'type'          => $Transaction->type,
                 'created_at'    => time(),
                 'mode'          => 'pay',
-                'transaction_id'=> $Transaction->id,
+                'transaction_id' => $Transaction->id,
                 'remain_time'   => $Transaction->remain_time
             ]);
 
@@ -2141,9 +2185,8 @@ class WebController extends Controller
             sendNotification(0, ['[c.title]' => $product->title], get_option('notification_template_buy_new'), 'user', $Transaction->buyer_id);
 
             return redirect('/product/' . $Transaction->content_id);
-        }else{
+        } else {
             return \redirect('/product/' . $product_id)->with('msg', trans('admin.payment_failed'));
         }
     }
-
 }
