@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig host="3.140.86.63" id="da616161-e699-4f1f-86eb-0acf8fcb2ce0" keyPath="C:\Users\devel\Downloads\PROYECTOSUBIRAWS\tmp\default-ohio.ppk" port="22" nameFormat="DESCRIPTIVE" username="ubuntu" />
+    </configs>
+  </component>
+</project>
